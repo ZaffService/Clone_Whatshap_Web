@@ -6,8 +6,23 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
-    cssMinify: false, // Désactive temporairement la minification CSS
-    minify: 'terser'  // Minifie seulement le JavaScript
+    cssMinify: false,
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      },
+      external: [],
+      onwarn(warning, warn) {
+        // Ignorer certains warnings Rollup
+        if (warning.code === 'UNRESOLVED_IMPORT') return
+        if (warning.code === 'THIS_IS_UNDEFINED') return
+        warn(warning)
+      }
+    }
+  },
+  define: {
+    global: 'globalThis'
   },
   server: {
     port: 5173,

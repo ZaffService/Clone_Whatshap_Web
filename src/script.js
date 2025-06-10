@@ -1,214 +1,214 @@
-import { getCurrentUser, createLoginForm, logout } from "./utils/auth.js"
-import { getChats, updateChat, addMessage, getMessages } from "./utils/api.js"
-import { showToast, showNotification, requestNotificationPermission } from "./utils/notifications.js"
-import { initializeAudioCall, initializeVideoCall } from "./utils/calls.js"
-import { initializeRealTimeSync } from "./utils/realtime.js"
-import { handleSendMessage } from "./utils/chat-handler.js"
-import { setupAudioRecorder } from "./utils/audio-recorder.js"
+import { getCurrentUser, createLoginForm, logout } from "./utils/auth.js";
+import { getChats, updateChat, addMessage, getMessages } from "./utils/api.js";
+import { showToast, showNotification, requestNotificationPermission } from "./utils/notifications.js";
+import { initializeAudioCall, initializeVideoCall } from "./utils/calls.js";
+import { initializeRealTimeSync } from "./utils/realtime.js";
+import { handleSendMessage } from "./utils/chat-handler.js";
+import { setupAudioRecorder } from "./utils/audio-recorder.js";
 
-let chats = []
-let currentChat = null
+let chats = [];
+let currentChat = null;
 // Rendre currentChat accessible globalement pour les modules
-window.currentChat = null
-const realTimeInterval = null
-const typingTimeout = null
+window.currentChat = null;
+const realTimeInterval = null;
+const typingTimeout = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Application démarrée")
-  initApp()
-})
+  console.log("Application démarrée");
+  initApp();
+});
 
 async function initApp() {
-  const mainContainer = document.getElementById("mainContainer")
-  const loginContainer = document.getElementById("loginContainer")
+  const mainContainer = document.getElementById("mainContainer");
+  const loginContainer = document.getElementById("loginContainer");
 
   // Vérifier l'utilisateur connecté
-  const currentUser = getCurrentUser()
+  const currentUser = getCurrentUser();
 
   if (!currentUser) {
-    console.log("Aucun utilisateur connecté")
-    showLoginForm()
+    console.log("Aucun utilisateur connecté");
+    showLoginForm();
   } else {
-    console.log("Utilisateur connecté:", currentUser.name)
-    showMainApp()
+    console.log("Utilisateur connecté:", currentUser.name);
+    showMainApp();
   }
 
   function showLoginForm() {
-    mainContainer.style.display = "none"
-    loginContainer.style.display = "block"
-    loginContainer.innerHTML = ""
+    mainContainer.style.display = "none";
+    loginContainer.style.display = "block";
+    loginContainer.innerHTML = "";
 
     const loginForm = createLoginForm((user) => {
-      console.log("Connexion réussie pour:", user.name)
-      showMainApp()
-    })
+      console.log("Connexion réussie pour:", user.name);
+      showMainApp();
+    });
 
-    loginContainer.appendChild(loginForm)
+    loginContainer.appendChild(loginForm);
   }
 
   function showMainApp() {
-    loginContainer.style.display = "none"
-    mainContainer.style.display = "flex"
-    initMainInterface()
+    loginContainer.style.display = "none";
+    mainContainer.style.display = "flex";
+    initMainInterface();
   }
 }
 
 async function initMainInterface() {
   try {
-    await loadChats()
-    setupEventListeners()
-    updateUserAvatar()
-    showWelcomeMessage()
-    initializeRealTimeSync(handleNewMessage, handleUserStatusUpdate)
-    startAutoRefresh() // Ajoutez cette ligne
-    setupAudioRecorder()
-    console.log("Interface principale initialisée")
+    await loadChats();
+    setupEventListeners();
+    updateUserAvatar();
+    showWelcomeMessage();
+    initializeRealTimeSync(handleNewMessage, handleUserStatusUpdate);
+    startAutoRefresh(); // Ajoutez cette ligne
+    setupAudioRecorder();
+    console.log("Interface principale initialisée");
   } catch (error) {
-    console.error("Erreur initialisation:", error)
-    showToast("Erreur de chargement", "error")
+    console.error("Erreur initialisation:", error);
+    showToast("Erreur de chargement", "error");
   }
 }
 
 async function loadChats() {
   try {
-    chats = await getChats()
-    renderChatList()
+    chats = await getChats();
+    renderChatList();
 
     // Si un chat est actuellement ouvert, rafraîchir ses messages
     if (currentChat) {
-      const messages = await getMessages(currentChat.id)
-      renderMessages(messages)
+      const messages = await getMessages(currentChat.id);
+      renderMessages(messages);
     }
   } catch (error) {
-    console.error("Erreur chargement chats:", error)
-    showToast("Impossible de charger les conversations", "error")
+    console.error("Erreur chargement chats:", error);
+    showToast("Impossible de charger les conversations", "error");
   }
 }
 
 function setupEventListeners() {
   // Avatar utilisateur pour ouvrir le profil
-  const userAvatarButton = document.getElementById("userAvatarButton")
+  const userAvatarButton = document.getElementById("userAvatarButton");
   if (userAvatarButton) {
-    userAvatarButton.addEventListener("click", showProfile)
+    userAvatarButton.addEventListener("click", showProfile);
   }
 
   // Bouton retour du profil
-  const backToChats = document.getElementById("backToChats")
+  const backToChats = document.getElementById("backToChats");
   if (backToChats) {
-    backToChats.addEventListener("click", hideProfile)
+    backToChats.addEventListener("click", hideProfile);
   }
 
   // Bouton de déconnexion
-  const logoutButton = document.getElementById("logoutButton")
+  const logoutButton = document.getElementById("logoutButton");
   if (logoutButton) {
-    logoutButton.addEventListener("click", logout)
+    logoutButton.addEventListener("click", logout);
   }
 
   // Bouton retour
-  const backButton = document.getElementById("backButton")
+  const backButton = document.getElementById("backButton");
   if (backButton) {
-    backButton.addEventListener("click", handleBackButton)
+    backButton.addEventListener("click", handleBackButton);
   }
 
   // Input de message
-  setupMessageInput()
+  setupMessageInput();
 
   // Navigation
-  setupNavigation()
+  setupNavigation();
 
   // Search
-  setupSearch()
+  setupSearch();
 
   // Filter tabs
-  setupFilterTabs()
+  setupFilterTabs();
 
   // Call buttons
-  setupCallButtons()
+  setupCallButtons();
 
   // File attachment
-  setupFileAttachment()
+  setupFileAttachment();
 
   // Responsive
-  window.addEventListener("resize", handleResize)
+  window.addEventListener("resize", handleResize);
 
   // Notifications permission
-  requestNotificationPermission()
+  requestNotificationPermission();
 
   // Voice recording
-  setupVoiceRecording()
+  setupVoiceRecording();
 }
 
 function setupSearch() {
-  const searchInput = document.getElementById("searchInput")
+  const searchInput = document.getElementById("searchInput");
   if (searchInput) {
     searchInput.addEventListener("input", (e) => {
-      const query = e.target.value.toLowerCase().trim()
-      filterChats(query)
-    })
+      const query = e.target.value.toLowerCase().trim();
+      filterChats(query);
+    });
   }
 }
 
 function setupFilterTabs() {
-  const filterTabs = document.querySelectorAll(".filter-tab")
+  const filterTabs = document.querySelectorAll(".filter-tab");
   filterTabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       // Remove active class from all tabs
       filterTabs.forEach((t) => {
-        t.classList.remove("active", "bg-green-600", "text-white")
-        t.classList.add("text-gray-400")
-      })
+        t.classList.remove("active", "bg-green-600", "text-white");
+        t.classList.add("text-gray-400");
+      });
 
       // Add active class to clicked tab
-      tab.classList.add("active", "bg-green-600", "text-white")
-      tab.classList.remove("text-gray-400")
+      tab.classList.add("active", "bg-green-600", "text-white");
+      tab.classList.remove("text-gray-400");
 
-      const filter = tab.dataset.filter
-      applyFilter(filter)
-    })
-  })
+      const filter = tab.dataset.filter;
+      applyFilter(filter);
+    });
+  });
 }
 
 function setupCallButtons() {
-  const voiceCallBtn = document.getElementById("voiceCallBtn")
-  const videoCallBtn = document.getElementById("videoCallBtn")
+  const voiceCallBtn = document.getElementById("voiceCallBtn");
+  const videoCallBtn = document.getElementById("videoCallBtn");
 
   if (voiceCallBtn) {
     voiceCallBtn.addEventListener("click", () => {
       if (currentChat) {
-        initializeAudioCall(currentChat)
+        initializeAudioCall(currentChat);
       }
-    })
+    });
   }
 
   if (videoCallBtn) {
     videoCallBtn.addEventListener("click", () => {
       if (currentChat) {
-        initializeVideoCall(currentChat)
+        initializeVideoCall(currentChat);
       }
-    })
+    });
   }
 }
 
 function setupFileAttachment() {
-  const attachBtn = document.getElementById("attachBtn")
-  const fileInput = document.getElementById("fileInput")
+  const attachBtn = document.getElementById("attachBtn");
+  const fileInput = document.getElementById("fileInput");
 
   if (attachBtn && fileInput) {
     attachBtn.addEventListener("click", () => {
-      fileInput.click()
-    })
+      fileInput.click();
+    });
 
-    fileInput.addEventListener("change", handleFileUpload)
+    fileInput.addEventListener("change", handleFileUpload);
   }
 }
 
 async function handleFileUpload(event) {
-  const file = event.target.files[0]
-  if (!file || !currentChat) return
+  const file = event.target.files[0];
+  if (!file || !currentChat) return;
 
   try {
     // Convert file to base64
-    const base64 = await fileToBase64(file)
+    const base64 = await fileToBase64(file);
 
     const message = {
       id: Date.now(),
@@ -221,146 +221,146 @@ async function handleFileUpload(event) {
       fileName: file.name,
       fileSize: file.size,
       status: "sent",
-    }
+    };
 
-    await sendMessage(message)
-    event.target.value = "" // Reset file input
+    await sendMessage(message);
+    event.target.value = ""; // Reset file input
   } catch (error) {
-    console.error("Erreur upload fichier:", error)
-    showToast("Erreur lors de l'envoi du fichier", "error")
+    console.error("Erreur upload fichier:", error);
+    showToast("Erreur lors de l'envoi du fichier", "error");
   }
 }
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = (error) => reject(error)
-  })
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
 }
 
 function getFileType(mimeType) {
-  if (mimeType.startsWith("image/")) return "image"
-  if (mimeType.startsWith("video/")) return "video"
-  if (mimeType.startsWith("audio/")) return "audio"
-  return "document"
+  if (mimeType.startsWith("image/")) return "image";
+  if (mimeType.startsWith("video/")) return "video";
+  if (mimeType.startsWith("audio/")) return "audio";
+  return "document";
 }
 
 function filterChats(query) {
-  const chatItems = document.querySelectorAll(".chat-item")
+  const chatItems = document.querySelectorAll(".chat-item");
   chatItems.forEach((item) => {
-    const name = item.querySelector(".chat-name")?.textContent.toLowerCase() || ""
-    const message = item.querySelector(".chat-message")?.textContent.toLowerCase() || ""
+    const name = item.querySelector(".chat-name")?.textContent.toLowerCase() || "";
+    const message = item.querySelector(".chat-message")?.textContent.toLowerCase() || "";
 
     if (name.includes(query) || message.includes(query)) {
-      item.style.display = "block"
+      item.style.display = "block";
     } else {
-      item.style.display = "none"
+      item.style.display = "none";
     }
-  })
+  });
 }
 
 function applyFilter(filter) {
-  const currentUser = getCurrentUser()
-  if (!currentUser) return
+  const currentUser = getCurrentUser();
+  if (!currentUser) return;
 
-  let filteredChats = chats.filter((chat) => chat.id !== currentUser.id)
+  let filteredChats = chats.filter((chat) => chat.id !== currentUser.id);
 
   switch (filter) {
     case "unread":
-      filteredChats = filteredChats.filter((chat) => chat.unread > 0)
-      break
+      filteredChats = filteredChats.filter((chat) => chat.unread > 0);
+      break;
     case "favorites":
-      filteredChats = filteredChats.filter((chat) => chat.isFavorite)
-      break
+      filteredChats = filteredChats.filter((chat) => chat.isFavorite);
+      break;
     case "groups":
-      filteredChats = filteredChats.filter((chat) => chat.isGroup)
-      break
+      filteredChats = filteredChats.filter((chat) => chat.isGroup);
+      break;
     default:
       // "all" - no additional filtering
-      break
+      break;
   }
 
-  renderFilteredChatList(filteredChats)
+  renderFilteredChatList(filteredChats);
 }
 
 function renderFilteredChatList(filteredChats) {
-  const chatList = document.getElementById("chatList")
-  if (!chatList) return
+  const chatList = document.getElementById("chatList");
+  if (!chatList) return;
 
-  chatList.innerHTML = ""
+  chatList.innerHTML = "";
 
   filteredChats.forEach((chat) => {
-    const chatItem = createChatItem(chat)
-    chatList.appendChild(chatItem)
-  })
+    const chatItem = createChatItem(chat);
+    chatList.appendChild(chatItem);
+  });
 }
 
 function showProfile() {
-  const sidebar = document.getElementById("sidebar")
-  const profilePanel = document.getElementById("profilePanel")
-  const chatArea = document.getElementById("chatArea")
+  const sidebar = document.getElementById("sidebar");
+  const profilePanel = document.getElementById("profilePanel");
+  const chatArea = document.getElementById("chatArea");
 
   // Cacher la sidebar et la zone de chat
-  sidebar.style.display = "none"
-  chatArea.style.display = "none"
+  sidebar.style.display = "none";
+  chatArea.style.display = "none";
 
   // Afficher le panneau de profil
-  profilePanel.style.display = "flex"
+  profilePanel.style.display = "flex";
 
   // Mettre à jour les informations du profil
-  updateProfileInfo()
+  updateProfileInfo();
 }
 
 function hideProfile() {
-  const sidebar = document.getElementById("sidebar")
-  const profilePanel = document.getElementById("profilePanel")
-  const chatArea = document.getElementById("chatArea")
+  const sidebar = document.getElementById("sidebar");
+  const profilePanel = document.getElementById("profilePanel");
+  const chatArea = document.getElementById("chatArea");
 
   // Cacher le panneau de profil
-  profilePanel.style.display = "none"
+  profilePanel.style.display = "none";
 
   // Réafficher la sidebar
-  sidebar.style.display = "flex"
+  sidebar.style.display = "flex";
 
   // Réafficher la zone de chat si un chat était ouvert
   if (currentChat) {
-    chatArea.style.display = "flex"
+    chatArea.style.display = "flex";
   }
 }
 
 function updateProfileInfo() {
-  const currentUser = getCurrentUser()
+  const currentUser = getCurrentUser();
   if (currentUser) {
-    const profileImage = document.getElementById("profileImage")
-    const profileName = document.getElementById("profileName")
+    const profileImage = document.getElementById("profileImage");
+    const profileName = document.getElementById("profileName");
 
     if (profileImage) {
-      profileImage.src = currentUser.avatar
-      profileImage.alt = currentUser.name
+      profileImage.src = currentUser.avatar;
+      profileImage.alt = currentUser.name;
     }
 
     if (profileName) {
-      profileName.textContent = currentUser.name
+      profileName.textContent = currentUser.name;
     }
   }
 }
 
 function updateUserAvatar() {
-  const currentUser = getCurrentUser()
-  const userAvatars = document.querySelectorAll(".user-avatar img")
+  const currentUser = getCurrentUser();
+  const userAvatars = document.querySelectorAll(".user-avatar img");
 
   if (currentUser && userAvatars.length > 0) {
     userAvatars.forEach((avatar) => {
-      avatar.src = currentUser.avatar
-      avatar.alt = currentUser.name
-    })
+      avatar.src = currentUser.avatar;
+      avatar.alt = currentUser.name;
+    });
   }
 }
 
 function showWelcomeMessage() {
-  const messagesArea = document.getElementById("messagesArea")
+  const messagesArea = document.getElementById("messagesArea");
   if (messagesArea) {
     messagesArea.innerHTML = `
       <div class="flex items-center justify-center h-full text-gray-500">
@@ -378,43 +378,43 @@ function showWelcomeMessage() {
           </div>
         </div>
       </div>
-    `
+    `;
   }
 }
 
 function renderChatList() {
-  const chatList = document.getElementById("chatList")
-  if (!chatList) return
+  const chatList = document.getElementById("chatList");
+  if (!chatList) return;
 
-  const currentUser = getCurrentUser()
-  if (!currentUser) return
+  const currentUser = getCurrentUser();
+  if (!currentUser) return;
 
-  chatList.innerHTML = ""
+  chatList.innerHTML = "";
 
   // Filtrer les chats (exclure l'utilisateur actuel)
-  const filteredChats = chats.filter((chat) => chat.id !== currentUser.id)
+  const filteredChats = chats.filter((chat) => chat.id !== currentUser.id);
 
   // Trier par dernière activité
   filteredChats.sort((a, b) => {
-    const timeA = new Date(a.lastMessageTime || a.time)
-    const timeB = new Date(b.lastMessageTime || b.time)
-    return timeB - timeA
-  })
+    const timeA = new Date(a.lastMessageTime || a.time);
+    const timeB = new Date(b.lastMessageTime || b.time);
+    return timeB - timeA;
+  });
 
   filteredChats.forEach((chat) => {
-    const chatItem = createChatItem(chat)
-    chatList.appendChild(chatItem)
-  })
+    const chatItem = createChatItem(chat);
+    chatList.appendChild(chatItem);
+  });
 }
 
 function createChatItem(chat) {
-  const chatItem = document.createElement("div")
+  const chatItem = document.createElement("div");
   chatItem.className =
-    "chat-item px-4 py-3 cursor-pointer hover:bg-[#202c33] transition-colors border-b border-gray-700"
-  chatItem.dataset.chatId = chat.id
+    "chat-item px-4 py-3 cursor-pointer hover:bg-[#202c33] transition-colors border-b border-gray-700";
+  chatItem.dataset.chatId = chat.id;
 
-  const hasUnread = chat.unread > 0
-  const isOnline = chat.isOnline
+  const hasUnread = chat.unread > 0;
+  const isOnline = chat.isOnline;
 
   chatItem.innerHTML = `
     <div class="flex items-center space-x-3">
@@ -435,117 +435,117 @@ function createChatItem(chat) {
         </div>
       </div>
     </div>
-  `
+  `;
 
-  chatItem.addEventListener("click", () => openChat(chat.id))
+  chatItem.addEventListener("click", () => openChat(chat.id));
 
-  return chatItem
+  return chatItem;
 }
 
 async function openChat(chatId) {
-  hideProfile()
+  hideProfile();
 
-  currentChat = chats.find((chat) => chat.id === chatId)
-  window.currentChat = currentChat // Ajouter cette ligne
+  currentChat = chats.find((chat) => chat.id === chatId);
+  window.currentChat = currentChat; // Ajouter cette ligne
 
-  if (!currentChat) return
+  if (!currentChat) return;
 
   // Marquer comme lu
   if (currentChat.unread > 0) {
-    currentChat.unread = 0
-    await updateChat(currentChat)
+    currentChat.unread = 0;
+    await updateChat(currentChat);
   }
 
   // Mise à jour visuelle
   document.querySelectorAll(".chat-item").forEach((item) => {
-    item.classList.remove("bg-[#202c33]")
-  })
-  document.querySelector(`[data-chat-id="${chatId}"]`)?.classList.add("bg-[#202c33]")
+    item.classList.remove("bg-[#202c33]");
+  });
+  document.querySelector(`[data-chat-id="${chatId}"]`)?.classList.add("bg-[#202c33]");
 
   // Responsive
   if (isMobile()) {
-    document.getElementById("sidebar").style.display = "none"
-    document.getElementById("chatArea").style.display = "flex"
+    document.getElementById("sidebar").style.display = "none";
+    document.getElementById("chatArea").style.display = "flex";
   } else {
-    document.getElementById("chatArea").style.display = "flex"
+    document.getElementById("chatArea").style.display = "flex";
   }
 
-  showChatHeader()
-  await renderMessages()
-  showMessageInput()
-  renderChatList()
+  showChatHeader();
+  await renderMessages();
+  showMessageInput();
+  renderChatList();
 }
 
 function showChatHeader() {
-  const chatHeader = document.getElementById("chatHeader")
-  const chatAvatar = document.getElementById("chatAvatar")
-  const chatName = document.getElementById("chatName")
-  const chatStatus = document.getElementById("chatStatus")
+  const chatHeader = document.getElementById("chatHeader");
+  const chatAvatar = document.getElementById("chatAvatar");
+  const chatName = document.getElementById("chatName");
+  const chatStatus = document.getElementById("chatStatus");
 
   if (chatHeader && currentChat) {
-    chatHeader.style.display = "flex"
-    chatAvatar.innerHTML = `<img src="${currentChat.avatar}" alt="${currentChat.name}" class="w-10 h-10 rounded-full object-cover">`
-    chatName.textContent = currentChat.name
-    chatStatus.textContent = currentChat.isOnline ? "en ligne" : currentChat.status
+    chatHeader.style.display = "flex";
+    chatAvatar.innerHTML = `<img src="${currentChat.avatar}" alt="${currentChat.name}" class="w-10 h-10 rounded-full object-cover">`;
+    chatName.textContent = currentChat.name;
+    chatStatus.textContent = currentChat.isOnline ? "en ligne" : currentChat.status;
   }
 }
 
 async function renderMessages() {
-  const messagesArea = document.getElementById("messagesArea")
-  if (!messagesArea || !currentChat) return
+  const messagesArea = document.getElementById("messagesArea");
+  if (!messagesArea || !currentChat) return;
 
   try {
     // Récupérer les messages depuis l'API
-    const messages = await getMessages(currentChat.id)
-    currentChat.messages = messages
+    const messages = await getMessages(currentChat.id);
+    currentChat.messages = messages;
 
-    messagesArea.innerHTML = ""
+    messagesArea.innerHTML = "";
 
     messages.forEach((message) => {
-      const messageElement = createMessageElement(message)
-      messagesArea.appendChild(messageElement)
-    })
+      const messageElement = createMessageElement(message);
+      messagesArea.appendChild(messageElement);
+    });
 
-    messagesArea.scrollTop = messagesArea.scrollHeight
+    messagesArea.scrollTop = messagesArea.scrollHeight;
   } catch (error) {
-    console.error("Erreur lors du rendu des messages:", error)
-    showToast("Erreur lors du chargement des messages", "error")
+    console.error("Erreur lors du rendu des messages:", error);
+    showToast("Erreur lors du chargement des messages", "error");
   }
 }
 
 function createMessageElement(message) {
-  const currentUser = getCurrentUser()
-  const isSentByMe = message.senderId === currentUser.id || message.sent === true
+  const currentUser = getCurrentUser();
+  const isSentByMe = message.senderId === currentUser.id || message.sent === true;
 
-  const messageDiv = document.createElement("div")
-  messageDiv.className = `flex mb-4 ${isSentByMe ? "justify-end" : "justify-start"}`
-  messageDiv.dataset.messageId = message.id
+  const messageDiv = document.createElement("div");
+  messageDiv.className = `flex mb-4 ${isSentByMe ? "justify-end" : "justify-start"}`;
+  messageDiv.dataset.messageId = message.id;
 
-  let messageContent = ""
+  let messageContent = "";
 
   switch (message.type) {
     case "image":
       messageContent = `
         <img src="${message.fileData}" alt="${message.fileName}" class="max-w-xs rounded-lg mb-2 cursor-pointer" onclick="openImageModal('${message.fileData}')">
         <p class="text-sm">${message.text}</p>
-      `
-      break
+      `;
+      break;
     case "video":
       messageContent = `
         <video src="${message.fileData}" controls class="max-w-xs rounded-lg mb-2">
           Votre navigateur ne supporte pas la lecture vidéo.
         </video>
         <p class="text-sm">${message.text}</p>
-      `
-      break
+      `;
+      break;
     case "audio":
       messageContent = `
         <audio src="${message.fileData}" controls class="mb-2">
           Votre navigateur ne supporte pas la lecture audio.
         </audio>
         <p class="text-sm">${message.text}</p>
-      `
-      break
+      `;
+      break;
     case "document":
       messageContent = `
         <div class="flex items-center space-x-2 mb-2 p-2 bg-gray-700 rounded">
@@ -555,8 +555,8 @@ function createMessageElement(message) {
             <p class="text-xs text-gray-400">${formatFileSize(message.fileSize)}</p>
           </div>
         </div>
-      `
-      break
+      `;
+      break;
     case "voice":
       messageContent = `
         <div class="voice-message flex items-center gap-3 p-3 min-w-[200px]">
@@ -580,128 +580,128 @@ function createMessageElement(message) {
             </div>
           </div>
         </div>
-      `
+      `;
 
       // Ajouter la gestion audio après le rendu
       setTimeout(() => {
-        const messageEl = document.querySelector(`[data-message-id="${message.id}"]`)
+        const messageEl = document.querySelector(`[data-message-id="${message.id}"]`);
         if (messageEl) {
-          const playButton = messageEl.querySelector(".play-button")
-          const waveformBars = messageEl.querySelectorAll(".waveform-bar")
-          const duration = messageEl.querySelector(".duration")
-          let isPlaying = false
-          let animationInterval = null
-          let audio = null
+          const playButton = messageEl.querySelector(".play-button");
+          const waveformBars = messageEl.querySelectorAll(".waveform-bar");
+          const duration = messageEl.querySelector(".duration");
+          let isPlaying = false;
+          let animationInterval = null;
+          let audio = null;
 
           // Fonction pour créer l'audio à partir des données base64
           function createAudioFromBase64() {
             if (!message.fileData) {
-              console.error("Pas de données audio disponibles")
-              return null
+              console.error("Pas de données audio disponibles");
+              return null;
             }
 
             try {
               // Créer un nouvel élément audio
-              audio = new Audio()
-              audio.src = message.fileData
-              audio.preload = "metadata"
+              audio = new Audio();
+              audio.src = message.fileData;
+              audio.preload = "metadata";
 
               // Gérer les erreurs de chargement
               audio.onerror = (e) => {
-                console.error("Erreur chargement audio:", e)
-                duration.textContent = "Erreur"
-              }
+                console.error("Erreur chargement audio:", e);
+                duration.textContent = "Erreur";
+              };
 
               // Quand les métadonnées sont chargées
               audio.onloadedmetadata = () => {
                 if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
-                  duration.textContent = formatTime(audio.duration)
+                  duration.textContent = formatTime(audio.duration);
                 } else {
                   // Durée par défaut si impossible à déterminer
-                  duration.textContent = "0:05"
+                  duration.textContent = "0:05";
                 }
-              }
+              };
 
               // Gestion de la fin de lecture
               audio.onended = () => {
-                isPlaying = false
-                playButton.innerHTML = '<i class="fas fa-play text-sm"></i>'
-                clearInterval(animationInterval)
+                isPlaying = false;
+                playButton.innerHTML = '<i class="fas fa-play text-sm"></i>';
+                clearInterval(animationInterval);
                 waveformBars.forEach((bar) => {
-                  bar.style.backgroundColor = "#9ca3af"
-                })
-              }
+                  bar.style.backgroundColor = "#9ca3af";
+                });
+              };
 
               // Gestion des erreurs de lecture
               audio.onpause = () => {
-                isPlaying = false
-                playButton.innerHTML = '<i class="fas fa-play text-sm"></i>'
-                clearInterval(animationInterval)
-              }
+                isPlaying = false;
+                playButton.innerHTML = '<i class="fas fa-play text-sm"></i>';
+                clearInterval(animationInterval);
+              };
 
-              return audio
+              return audio;
             } catch (error) {
-              console.error("Erreur création audio:", error)
-              return null
+              console.error("Erreur création audio:", error);
+              return null;
             }
           }
 
           playButton.onclick = async () => {
             try {
               if (!audio) {
-                audio = createAudioFromBase64()
+                audio = createAudioFromBase64();
                 if (!audio) {
-                  showToast("Impossible de lire le message vocal", "error")
-                  return
+                  showToast("Impossible de lire le message vocal", "error");
+                  return;
                 }
               }
 
               if (isPlaying) {
-                audio.pause()
-                playButton.innerHTML = '<i class="fas fa-play text-sm"></i>'
-                clearInterval(animationInterval)
+                audio.pause();
+                playButton.innerHTML = '<i class="fas fa-play text-sm"></i>';
+                clearInterval(animationInterval);
                 // Reset waveform
                 waveformBars.forEach((bar) => {
-                  bar.style.backgroundColor = "#9ca3af"
-                })
-                isPlaying = false
+                  bar.style.backgroundColor = "#9ca3af";
+                });
+                isPlaying = false;
               } else {
                 // Essayer de jouer l'audio
                 try {
-                  await audio.play()
-                  playButton.innerHTML = '<i class="fas fa-pause text-sm"></i>'
-                  isPlaying = true
+                  await audio.play();
+                  playButton.innerHTML = '<i class="fas fa-pause text-sm"></i>';
+                  isPlaying = true;
 
                   // Animer les barres
                   animationInterval = setInterval(() => {
                     waveformBars.forEach((bar) => {
-                      const height = Math.random() * 16 + 4
-                      bar.style.height = `${height}px`
-                      bar.style.backgroundColor = "#10b981"
-                    })
-                  }, 100)
+                      const height = Math.random() * 16 + 4;
+                      bar.style.height = `${height}px`;
+                      bar.style.backgroundColor = "#10b981";
+                    });
+                  }, 100);
                 } catch (playError) {
-                  console.error("Erreur lecture:", playError)
-                  showToast("Erreur de lecture audio", "error")
-                  playButton.innerHTML = '<i class="fas fa-play text-sm"></i>'
-                  isPlaying = false
+                  console.error("Erreur lecture:", playError);
+                  showToast("Erreur de lecture audio", "error");
+                  playButton.innerHTML = '<i class="fas fa-play text-sm"></i>';
+                  isPlaying = false;
                 }
               }
             } catch (error) {
-              console.error("Erreur gestion lecture:", error)
-              showToast("Erreur de lecture audio", "error")
-              playButton.innerHTML = '<i class="fas fa-play text-sm"></i>'
-              isPlaying = false
+              console.error("Erreur gestion lecture:", error);
+              showToast("Erreur de lecture audio", "error");
+              playButton.innerHTML = '<i class="fas fa-play text-sm"></i>';
+              isPlaying = false;
             }
-          }
+          };
 
           // Initialiser l'audio
-          createAudioFromBase64()
+          createAudioFromBase64();
         }
-      }, 100)
-      break
+      }, 100);
+      break;
     default:
-      messageContent = `<p class="text-sm">${message.text}</p>`
+      messageContent = `<p class="text-sm">${message.text}</p>`;
   }
 
   messageDiv.innerHTML = `
@@ -714,40 +714,40 @@ function createMessageElement(message) {
       ${isSentByMe ? `<i class="fas fa-check-double text-xs ${message.status === "read" ? "text-blue-400" : "text-gray-400"}"></i>` : ""}
     </div>
   </div>
-`
+`;
 
-  return messageDiv
+  return messageDiv;
 }
 
 function formatFileSize(bytes) {
-  if (bytes === 0) return "0 Bytes"
-  const k = 1024
-  const sizes = ["Bytes", "KB", "MB", "GB"]
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 function showMessageInput() {
-  const messageInput = document.getElementById("messageInput")
+  const messageInput = document.getElementById("messageInput");
   if (messageInput) {
-    messageInput.style.display = "flex"
+    messageInput.style.display = "flex";
   }
 }
 
 function setupMessageInput() {
-  const messageText = document.getElementById("messageText")
-  const sendButton = document.getElementById("sendButton")
-  const voiceBtn = document.getElementById("voiceBtn")
+  const messageText = document.getElementById("messageText");
+  const sendButton = document.getElementById("sendButton");
+  const voiceBtn = document.getElementById("voiceBtn");
 
-  if (!messageText || !sendButton) return
+  if (!messageText || !sendButton) return;
 
   async function sendTextMessage() {
-    const text = messageText.value.trim()
-    if (!text || !currentChat) return
+    const text = messageText.value.trim();
+    if (!text || !currentChat) return;
 
     try {
-      const currentUser = getCurrentUser()
-      if (!currentUser) return
+      const currentUser = getCurrentUser();
+      if (!currentUser) return;
 
       const message = {
         id: Date.now(),
@@ -759,172 +759,172 @@ function setupMessageInput() {
         timestamp: new Date().toISOString(),
         type: "text",
         status: "sent",
-      }
+      };
 
       // Vider le champ de message immédiatement
-      messageText.value = ""
+      messageText.value = "";
 
       // Ajouter le message localement pour l'affichage immédiat
-      currentChat.messages = currentChat.messages || []
-      currentChat.messages.push(message)
-      currentChat.lastMessage = text
-      currentChat.time = message.time
-      currentChat.lastMessageTime = message.timestamp
+      currentChat.messages = currentChat.messages || [];
+      currentChat.messages.push(message);
+      currentChat.lastMessage = text;
+      currentChat.time = message.time;
+      currentChat.lastMessageTime = message.timestamp;
 
       // Envoyer au serveur
-      await handleSendMessage(currentUser.id, currentChat.id, message)
+      await handleSendMessage(currentUser.id, currentChat.id, message);
     } catch (error) {
-      console.error("Erreur envoi message:", error)
-      showToast("Erreur lors de l'envoi", "error")
+      console.error("Erreur envoi message:", error);
+      showToast("Erreur lors de l'envoi", "error");
     }
   }
 
-  sendButton.addEventListener("click", sendTextMessage)
+  sendButton.addEventListener("click", sendTextMessage);
   messageText.addEventListener("keypress", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      sendTextMessage()
+      e.preventDefault();
+      sendTextMessage();
     }
-  })
+  });
 
   // Voice message
   if (voiceBtn) {
-    voiceBtn.addEventListener("click", startVoiceRecording)
+    voiceBtn.addEventListener("click", startVoiceRecording);
   }
 }
 
 async function sendMessage(message) {
-  if (!currentChat) return
+  if (!currentChat) return;
 
   try {
-    currentChat.messages.push(message)
-    currentChat.lastMessage = message.type === "text" ? message.text : `📎 ${message.fileName || "Fichier"}`
-    currentChat.time = message.time
-    currentChat.lastMessageTime = message.timestamp
+    currentChat.messages.push(message);
+    currentChat.lastMessage = message.type === "text" ? message.text : `📎 ${message.fileName || "Fichier"}`;
+    currentChat.time = message.time;
+    currentChat.lastMessageTime = message.timestamp;
 
-    await addMessage(currentChat.id, message)
-    await updateChat(currentChat)
+    await addMessage(currentChat.id, message);
+    await updateChat(currentChat);
 
-    renderMessages()
-    renderChatList()
+    renderMessages();
+    renderChatList();
   } catch (error) {
-    console.error("Erreur envoi message:", error)
-    showToast("Erreur lors de l'envoi", "error")
+    console.error("Erreur envoi message:", error);
+    showToast("Erreur lors de l'envoi", "error");
   }
 }
 
 function handleBackButton() {
   if (isMobile()) {
-    document.getElementById("sidebar").style.display = "flex"
-    document.getElementById("chatArea").style.display = "none"
+    document.getElementById("sidebar").style.display = "flex";
+    document.getElementById("chatArea").style.display = "none";
   }
 
-  currentChat = null
-  window.currentChat = null // Ajouter cette ligne
-  document.getElementById("chatHeader").style.display = "none"
-  document.getElementById("messageInput").style.display = "none"
-  showWelcomeMessage()
+  currentChat = null;
+  window.currentChat = null; // Ajouter cette ligne
+  document.getElementById("chatHeader").style.display = "none";
+  document.getElementById("messageInput").style.display = "none";
+  showWelcomeMessage();
 }
 
 function setupNavigation() {
-  const navItems = document.querySelectorAll(".nav-item")
+  const navItems = document.querySelectorAll(".nav-item");
   navItems.forEach((item) => {
     item.addEventListener("click", () => {
-      const view = item.dataset.view
-      console.log("Navigation vers:", view)
+      const view = item.dataset.view;
+      console.log("Navigation vers:", view);
 
       // Remove active class from all nav items
-      navItems.forEach((nav) => nav.classList.remove("active"))
+      navItems.forEach((nav) => nav.classList.remove("active"));
 
       // Add active class to clicked item
-      item.classList.add("active")
+      item.classList.add("active");
 
       // Handle navigation
       switch (view) {
         case "chats":
           // Already handled by default
-          break
+          break;
         case "status":
-          showToast("Fonctionnalité Statuts bientôt disponible", "info")
-          break
+          showToast("Fonctionnalité Statuts bientôt disponible", "info");
+          break;
         case "communities":
-          showToast("Fonctionnalité Communautés bientôt disponible", "info")
-          break
+          showToast("Fonctionnalité Communautés bientôt disponible", "info");
+          break;
         case "settings":
-          showToast("Fonctionnalité Paramètres bientôt disponible", "info")
-          break
+          showToast("Fonctionnalité Paramètres bientôt disponible", "info");
+          break;
       }
-    })
-  })
+    });
+  });
 }
 
 function handleResize() {
   if (!isMobile() && currentChat) {
-    document.getElementById("sidebar").style.display = "flex"
-    document.getElementById("chatArea").style.display = "flex"
+    document.getElementById("sidebar").style.display = "flex";
+    document.getElementById("chatArea").style.display = "flex";
   }
 }
 
 function isMobile() {
-  return window.innerWidth < 768
+  return window.innerWidth < 768;
 }
 
 // Voice recording functions
-let mediaRecorder = null
-let audioChunks = []
+let mediaRecorder = null;
+let audioChunks = [];
 
 async function startVoiceRecording() {
   try {
     if (!currentChat) {
-      showToast("Sélectionnez une conversation d'abord", "error")
-      return
+      showToast("Sélectionnez une conversation d'abord", "error");
+      return;
     }
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    mediaRecorder = new MediaRecorder(stream)
-    audioChunks = []
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
 
     mediaRecorder.ondataavailable = (event) => {
-      audioChunks.push(event.data)
-    }
+      audioChunks.push(event.data);
+    };
 
     mediaRecorder.onstop = async () => {
-      const audioBlob = new Blob(audioChunks, { type: "audio/mp3" })
-      await handleVoiceMessage(audioBlob, currentChat)
-      stream.getTracks().forEach((track) => track.stop())
-    }
+      const audioBlob = new Blob(audioChunks, { type: "audio/mp3" });
+      await handleVoiceMessage(audioBlob, currentChat);
+      stream.getTracks().forEach((track) => track.stop());
+    };
 
-    mediaRecorder.start()
-    showToast("Enregistrement en cours... Cliquez à nouveau pour arrêter", "info")
+    mediaRecorder.start();
+    showToast("Enregistrement en cours... Cliquez à nouveau pour arrêter", "info");
 
-    const voiceBtn = document.getElementById("voiceBtn")
-    voiceBtn.innerHTML = '<i class="fas fa-stop text-xl text-red-500"></i>'
-    voiceBtn.onclick = stopVoiceRecording
+    const voiceBtn = document.getElementById("voiceBtn");
+    voiceBtn.innerHTML = '<i class="fas fa-stop text-xl text-red-500"></i>';
+    voiceBtn.onclick = stopVoiceRecording;
   } catch (error) {
-    console.error("Erreur enregistrement vocal:", error)
-    showToast("Impossible d'accéder au microphone", "error")
+    console.error("Erreur enregistrement vocal:", error);
+    showToast("Impossible d'accéder au microphone", "error");
   }
 }
 
 function stopVoiceRecording() {
   if (mediaRecorder && mediaRecorder.state === "recording") {
-    mediaRecorder.stop()
+    mediaRecorder.stop();
 
     // Reset button
-    const voiceBtn = document.getElementById("voiceBtn")
-    voiceBtn.innerHTML = '<i class="fas fa-microphone text-xl"></i>'
-    voiceBtn.onclick = startVoiceRecording
+    const voiceBtn = document.getElementById("voiceBtn");
+    voiceBtn.innerHTML = '<i class="fas fa-microphone text-xl"></i>';
+    voiceBtn.onclick = startVoiceRecording;
 
-    showToast("Message vocal envoyé", "success")
+    showToast("Message vocal envoyé", "success");
   }
 }
 
 function createVoiceMessage(audioBlob, currentUser, isSent = true) {
-  const container = document.createElement("div")
-  container.className = `voice-message-container ${isSent ? "sent" : "received"}`
+  const container = document.createElement("div");
+  container.className = `voice-message-container ${isSent ? "sent" : "received"}`;
 
-  const audioUrl = URL.createObjectURL(audioBlob)
-  const audio = new Audio(audioUrl)
+  const audioUrl = URL.createObjectURL(audioBlob);
+  const audio = new Audio(audioUrl);
 
   container.innerHTML = `
     <div class="voice-message">
@@ -959,61 +959,61 @@ function createVoiceMessage(audioBlob, currentUser, isSent = true) {
         </div>
       </div>
     </div>
-  `
+  `;
 
-  const playButton = container.querySelector(".voice-play-button")
-  const progressBar = container.querySelector(".voice-progress-bar")
-  const timeDisplay = container.querySelector(".voice-time")
+  const playButton = container.querySelector(".voice-play-button");
+  const progressBar = container.querySelector(".voice-progress-bar");
+  const timeDisplay = container.querySelector(".voice-time");
 
-  let isPlaying = false
+  let isPlaying = false;
 
   playButton.addEventListener("click", () => {
     if (isPlaying) {
-      audio.pause()
-      playButton.innerHTML = '<i class="fas fa-play"></i>'
+      audio.pause();
+      playButton.innerHTML = '<i class="fas fa-play"></i>';
     } else {
-      audio.play()
-      playButton.innerHTML = '<i class="fas fa-pause"></i>'
+      audio.play();
+      playButton.innerHTML = '<i class="fas fa-pause"></i>';
     }
-    isPlaying = !isPlaying
-  })
+    isPlaying = !isPlaying;
+  });
 
   audio.addEventListener("timeupdate", () => {
-    const progress = (audio.currentTime / audio.duration) * 100
-    progressBar.style.width = `${progress}%`
-    timeDisplay.textContent = formatTime(audio.currentTime)
-  })
+    const progress = (audio.currentTime / audio.duration) * 100;
+    progressBar.style.width = `${progress}%`;
+    timeDisplay.textContent = formatTime(audio.currentTime);
+  });
 
   audio.addEventListener("ended", () => {
-    isPlaying = false
-    playButton.innerHTML = '<i class="fas fa-play"></i>'
-    progressBar.style.width = "0%"
-  })
+    isPlaying = false;
+    playButton.innerHTML = '<i class="fas fa-play"></i>';
+    progressBar.style.width = "0%";
+  });
 
-  return container
+  return container;
 }
 
 function formatTime(seconds) {
   if (!seconds || !isFinite(seconds) || isNaN(seconds)) {
-    return "0:05" // Durée par défaut
+    return "0:05"; // Durée par défaut
   }
 
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = Math.floor(seconds % 60)
-  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
 async function handleVoiceMessage(audioBlob, currentChat) {
   try {
-    const currentUser = getCurrentUser()
-    if (!currentUser || !currentChat) return
+    const currentUser = getCurrentUser();
+    if (!currentUser || !currentChat) return;
 
     // Convertir en base64 pour le stockage
     const base64Audio = await new Promise((resolve) => {
-      const reader = new FileReader()
-      reader.onloadend = () => resolve(reader.result)
-      reader.readAsDataURL(audioBlob)
-    })
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(audioBlob);
+    });
 
     const message = {
       id: Date.now(),
@@ -1029,20 +1029,20 @@ async function handleVoiceMessage(audioBlob, currentChat) {
       type: "voice",
       fileData: base64Audio,
       status: "sent",
-    }
+    };
 
     // Envoyer le message
-    await sendMessage(message)
+    await sendMessage(message);
   } catch (error) {
-    console.error("Erreur envoi message vocal:", error)
-    showToast("Erreur lors de l'envoi du message vocal", "error")
+    console.error("Erreur envoi message vocal:", error);
+    showToast("Erreur lors de l'envoi du message vocal", "error");
   }
 }
 
 // Ajout de la fonction pour créer l'élément de message vocal
 function createVoiceMessageElement(message) {
-  const container = document.createElement("div")
-  container.className = `message-bubble ${message.sent ? "sent" : "received"}`
+  const container = document.createElement("div");
+  container.className = `message-bubble ${message.sent ? "sent" : "received"}`;
 
   container.innerHTML = `
     <div class="voice-message">
@@ -1056,56 +1056,56 @@ function createVoiceMessageElement(message) {
       <span class="time">${message.time}</span>
       ${message.sent ? `<i class="fas fa-check-double message-status"></i>` : ""}
     </div>
-  `
+  `;
 
   // Gérer la lecture audio
-  const audio = new Audio(message.audioUrl)
-  const playButton = container.querySelector(".play-button")
-  const waveform = container.querySelector(".waveform-progress")
-  const duration = container.querySelector(".duration")
+  const audio = new Audio(message.audioUrl);
+  const playButton = container.querySelector(".play-button");
+  const waveform = container.querySelector(".waveform-progress");
+  const duration = container.querySelector(".duration");
 
   playButton.addEventListener("click", () => {
     if (audio.paused) {
-      audio.play()
-      playButton.innerHTML = '<i class="fas fa-pause"></i>'
+      audio.play();
+      playButton.innerHTML = '<i class="fas fa-pause"></i>';
     } else {
-      audio.pause()
-      playButton.innerHTML = '<i class="fas fa-play"></i>'
+      audio.pause();
+      playButton.innerHTML = '<i class="fas fa-play"></i>';
     }
-  })
+  });
 
   audio.addEventListener("timeupdate", () => {
-    const progress = (audio.currentTime / audio.duration) * 100
-    waveform.style.width = `${progress}%`
-    duration.textContent = formatTime(audio.currentTime)
-  })
+    const progress = (audio.currentTime / audio.duration) * 100;
+    waveform.style.width = `${progress}%`;
+    duration.textContent = formatTime(audio.currentTime);
+  });
 
   audio.addEventListener("ended", () => {
-    playButton.innerHTML = '<i class="fas fa-play"></i>'
-    waveform.style.width = "0%"
-  })
+    playButton.innerHTML = '<i class="fas fa-play"></i>';
+    waveform.style.width = "0%";
+  });
 
-  return container
+  return container;
 }
 
 function setupVoiceRecording() {
-  const voiceBtn = document.getElementById("voiceBtn")
+  const voiceBtn = document.getElementById("voiceBtn");
   if (voiceBtn) {
     voiceBtn.addEventListener("click", () => {
       if (mediaRecorder && mediaRecorder.state === "recording") {
-        stopVoiceRecording()
+        stopVoiceRecording();
       } else {
-        startVoiceRecording()
+        startVoiceRecording();
       }
-    })
+    });
   }
 }
 
 // Ajouter ces fonctions après les imports et avant le reste du code
 
 function handleNewMessage(message) {
-  const currentUser = getCurrentUser()
-  if (!currentUser) return
+  const currentUser = getCurrentUser();
+  if (!currentUser) return;
 
   try {
     // Trouver le chat concerné
