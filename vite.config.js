@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { resolve } from 'path'
 
 export default defineConfig({
   css: {
@@ -6,26 +7,36 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
-    cssMinify: false,
+    cssMinify: true,
     minify: 'terser',
     rollupOptions: {
-      output: {
-        manualChunks: undefined
+      input: {
+        main: resolve(__dirname, 'index.html')
       },
-      external: [],
-      onwarn(warning, warn) {
-        // Ignorer certains warnings Rollup
-        if (warning.code === 'UNRESOLVED_IMPORT') return
-        if (warning.code === 'THIS_IS_UNDEFINED') return
-        warn(warning)
+      output: {
+        manualChunks: undefined,
+        format: 'es',
+        entryFileNames: '[name].[hash].js',
+        chunkFileNames: '[name].[hash].js',
+        assetFileNames: '[name].[hash][extname]'
       }
-    }
+    },
+    outDir: 'dist',
+    assetsDir: 'assets',
+    emptyOutDir: true
   },
   define: {
-    global: 'globalThis'
+    'process.env': process.env
   },
   server: {
-    port: 5173,
-    host: true
+    port: process.env.PORT || 5173,
+    host: '0.0.0.0',
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_URL || 'http://localhost:5001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   }
 })
