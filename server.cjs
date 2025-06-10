@@ -16,17 +16,8 @@ server.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Middleware pour logger les requêtes
-server.use((req, res, next) => {
-      console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-      next();
-});
-
 server.use(middlewares);
-
-// Routes personnalisées
 server.use('/api', router);
-server.use(router);
 
 // Pour Vercel serverless
 module.exports = server;

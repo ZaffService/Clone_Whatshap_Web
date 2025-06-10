@@ -1,18 +1,16 @@
-import { defineConfig } from "vite"
+import { defineConfig } from 'vite'
 
 export default defineConfig({
-  server: {
-    host: true,
-    port: 5173,
-    strictPort: true,
-    cors: true,
+  css: {
+    postcss: './postcss.config.js'
   },
   build: {
-    outDir: "dist",
-    assetsDir: "assets",
-    sourcemap: true,
+    target: 'esnext',
+    cssMinify: false, // Désactive temporairement la minification CSS
+    minify: 'terser'  // Minifie seulement le JavaScript
   },
-  optimizeDeps: {
-    include: [],
-  },
+  server: {
+    port: 5173,
+    host: true
+  }
 })
